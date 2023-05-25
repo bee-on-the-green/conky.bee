@@ -1,0 +1,561 @@
+#!/bin/bash
+
+# THIS IS MY CONCKY
+
+
+red="\e[0;91m"
+blue="\e[0;94m"
+expand_bg="\e[K"
+blue_bg="\e[0;104m${expand_bg}"
+red_bg="\e[0;101m${expand_bg}"
+green_bg="\e[0;102m${expand_bg}"
+green="\e[0;92m"
+white="\e[0;97m"
+bold="\e[1m"
+uline="\e[4m"
+reset="\e[0m"
+
+
+RED='\e[1;31m'
+CYAN='\e[1;36m'
+GREEN='\e[1;32m'
+YELLOW='\e[1;33m'
+PURPLE='\e[1;35m'
+
+
+
+
+
+
+
+while true; do
+
+
+########################################################################
+# 	START CHRONO
+######################################################################
+
+secmil1=$(date +%s%N)  # time at T1
+
+#########################################################################"
+#	CALCULATE LOAD AVERAGE ----> (8)
+#############################################################################
+
+uptime | awk '{print $(NF-2)" "$(NF-1)" "$NF}' > $CONKY/load # THATS LOAD AVERAGE
+sed -i 's|,||g' $CONKY/load # THAT'S THE FIRST FIELD WITHOUT THE COMA
+
+cp $CONKY/load $CONKY/load2 # create a copy to select first figure
+
+loadFirst=$(cut -b 1 $CONKY/load2)
+
+
+
+########################################################################
+#	CALCULATE  UPTIME   ---> (3)
+########################################################################
+up=$(cat /proc/uptime|awk '{print $1}' | awk -F '.' '{print$1}')
+hours=$(($up/3600))
+uptime=$(numfmt --grouping $hours)
+
+# #############  CALCULATE RANDOM QUOTE  ##############
+
+quote1=$(shuf -n 1 $CONKY/jean)
+quote2=$(shuf -n 1 $CONKY/jean)
+
+#echo $quote1 > $CONKY/Q1
+#echo $quote2 > $CONKY/Q2
+
+###########################################################################
+#	EVALUATE IF QUOTE NUMBER number2 STARTS WITH A CAPITAL LETTER
+############################################################################
+
+echo $quote2 > $CONKY/Q2
+
+maj=$(grep '^[[:upper:]][[:lower:]]' $CONKY/Q2) # start with cap
+
+
+		if [ -z $maj ]; then
+
+			echo "$quote1" > $CONKY/quote1.txt
+			echo "$quote2" > $CONKY/quote2.txt
+			quote1=$(<$CONKY/quote1.txt)
+			quote2=$(<$CONKY/quote2.txt)
+			
+			
+		else	
+			echo "$quote2" > $CONKY/quote1.txt
+			echo "$quote1" > $CONKY/quote2.txt
+			quote1=$(<$CONKY/quote1.txt)
+			quote2=$(<$CONKY/quote2.txt)
+	
+ 		fi
+
+
+
+
+################################################################################
+#	EVALUATE TEMPERATURES  ----> (9)
+################################################################################
+
+t=$(cat /sys/class/thermal/thermal_zone*/temp | head -n 1 | cut -b 1-2)
+
+
+############################################################"
+##	EVALUATE CPU AVERAGE  --->  (7)
+##########################################################
+
+#cpu=$(sar 1 1 | grep Aver | awk '{print$6}')
+cpu=$(vmstat 1 2|tail -1|awk '{print $15}')
+#echo "CPU Usage: "$[100-$(vmstat 1 2|tail -1|awk '{print $15}')]"%"
+
+
+#################################################################""
+#	GET EPOCH IN SECONDS  ---->  (1)
+##############################################################
+
+time=$(date +%s)
+epoch=$(numfmt --grouping $time)
+
+##############################################################################
+#	EVALUATE BEE' s AGE  ---->  (2)
+#####################################################################
+
+
+bee=$(($time-20219400))
+days=$(($bee/86400))
+bee2=$(numfmt --grouping $days)
+
+
+
+
+####################################################################################
+#	EVALUATE LOAD ( LAST MINUTE)  ---->  (8)
+####################################################################################
+
+uptime | awk '{print $(NF-2)" "$(NF-1)" "$NF}' > $CONKY/load # THATS LOAD AVERAGE
+sed -i 's|,||g' $CONKY/load # THAT'S THE FIRST FIELD
+
+cp $CONKY/load $CONKY/load2 # create a copy to select first figure
+
+cut -b 1 $CONKY/load2
+one=$(awk '{print $1}' $CONKY/load)
+
+
+
+###################################################################################
+###############################################################################"##
+###  				ECHO STAGE
+###################################################################################
+###################################################################################
+
+echo "
+"
+
+
+###################################################################################
+#	ECHOING EPOCH		(1) --> OKAY
+#####################################################################################
+
+echo -ne "${bold}   Epoch:    ${reset}${YELLOW}$epoch sec${reset}
+"
+
+
+
+###################################################################################
+#	ECHOING BEE's AGE	(2) --> OKAY
+#####################################################################################
+
+echo -ne "${bold}   $USER's:          $bee2 days${reset}
+"
+
+
+###################################################################################
+#	ECHOING UPTIME		 (3) ############################################"
+#####################################################################################
+
+
+		if [[ "$hours" -lt 10 ]]; then
+
+			echo -ne "${bold}   Uptime:${reset}             ${GREEN}$uptime hours${reset}
+"
+		fi
+
+###############################################################################################
+
+		if [[ "$hours" -gt 10 ]] && [[ "$hours" -lt 24 ]]; then
+
+			echo -ne "${bold}   Uptime:${reset}            ${YELLOW}$uptime hours${reset}
+"
+
+		fi
+###################################################################################################
+
+		if [[ "$hours" -ge 24 ]] && [[ "$hours" -lt 48 ]]; then
+
+			echo -ne "${bold}   Uptime:${reset}      ${PURPLE}reboot advised${reset}
+"
+
+		fi
+######################################################################################################
+
+		if [[ "$hours" -ge 48 ]] && [[ "$hours" -lt 48 ]]; then
+
+			echo -ne "${bold}   Uptime:${reset}   ${RED}reboot now!${reset}
+"
+
+		fi
+
+
+
+echo ""
+
+###########################################################################
+#	ECHOING AVAILABLE ON MVME  (5)
+#################################################################################
+df -h | grep n1p2 | awk '{print $4}' 2> /dev/null > $CONKY/disk # there's an error message on MX linux...
+# ..whenever the df command is performed, hence the dev/null
+
+disk=$(<$CONKY/disk)
+
+
+awk '{print substr($0, 1, length($0)-1)}' $CONKY/disk > $CONKY/disk2
+d=$(<$CONKY/disk2)
+
+#################################################################################################
+
+		if [[ "$d" -ge 100 ]]; then
+
+			echo -ne "${bold}   Available on nvme:     ${reset}${GREEN}$disk${reset}
+"
+		else
+			true
+		fi
+
+
+
+#################################################################################################
+
+
+		if [[ "$d" -le 100 ]] && [[ "$d" -gt 80 ]]; then
+
+			echo -ne "${bold}   Available on nvme:      ${reset}${CYAN}$disk${reset}
+"
+		else
+			true
+		fi
+
+
+####################################################################################################
+
+		if [[ "$d" -le 80 ]] && [[ "$d" -ge 60 ]]; then
+
+			echo -ne "${bold}   Available on nvme:      ${reset}${YELLOW}$disk${reset}
+"
+		else
+			true
+		fi
+
+
+#####################################################################################################
+
+		if [[ "$d" -lt 60 ]]; then
+
+			echo -ne "${bold}   Available on nvme:      ${reset}${RED}$disk${reset}
+"
+		else
+			true
+		fi
+
+
+
+###########################################################################
+#	ECHOING AVAILABLE AVAILABLE ON SD
+#################################################################################
+
+
+df -h | grep sda | awk '{print $4}' > $CONKY/sd
+sd=$(<$CONKY/sd)
+
+awk '{print substr($0, 1, length($0)-1)}' $CONKY/sd > $CONKY/sd2
+e=$(<$CONKY/sd2)
+
+########################################################################################
+
+		if [[ "$e" -gt 100 ]]; then
+
+			echo -ne "${bold}   Available on sd:       ${reset}${GREEN}$sd${reset}
+"
+		fi
+
+########################################################################################
+
+
+		if [[ "$e" -le 100 ]] && [[ "$e" -gt 80 ]]; then
+
+			echo -ne "${bold}   Available on sd:       ${reset}${CYAN}$sd${reset}
+"
+		fi
+
+
+##############################################################################################
+
+
+		if [[ "$e" -le 80 ]] && [[ "$e" -ge 60 ]]; then
+
+			echo -ne "${bold}   Available on sd:       ${reset}${YELLOW}$sd${reset}
+"
+		fi
+
+
+#################################################################################################
+
+		if [[ "$e" -lt 60 ]]; then
+
+			echo -ne "${bold}   Available on sd:       ${reset}${RED}$sd${reset}
+"
+		fi
+
+
+echo ""
+
+
+####################################################################""
+#	ECHOING RAM
+########################################################"
+
+
+freee=$(free | grep Mem | awk '{print$3}' | head -c-4)
+f=$(numfmt --grouping $freee)
+
+	if [ "$freee" -lt 1000 ]; then
+
+		echo -ne "${bold}   Ram usage:           $f MB${reset}
+"
+		
+	fi
+
+
+#############################################################################
+
+
+	if [ "$freee" -ge 1000 ] && [ $freee -lt 4000 ]; then
+
+		echo -ne "${bold}   Ram usage:${reset}         ${GREEN}$f GB${reset}
+"
+		
+	fi
+
+
+
+###############################################################################
+
+
+
+	if [ $freee -ge 4000 ] && [ $fre -lt 6000 ]; then
+
+		echo -ne "${bold}   Ram usage:${reset}         ${PURPLE}$f GB${reset}
+"
+		
+	fi
+
+
+
+######################################################################################
+
+
+
+	if [ $freee -ge 6000 ] && [ $fre -lt 8000 ]; then
+
+		echo -ne "${bold}   Ram usage:${reset}         ${YELLOW}$f GB${reset}
+"
+		
+	fi
+
+
+
+#################################################################################
+
+
+
+	if [ $freee -ge 8000 ]; then
+
+		echo -ne "${bold}   Ram usage:${reset}         ${GREEN}$f GB${reset}
+"
+		
+	fi
+
+
+
+
+
+####################################################################""
+#	ECHOING CPU  ---> OKAY
+########################################################  
+
+
+#
+		if [[ "$cpu" -lt 50 ]]; then
+
+			echo -ne "${bold}   CPU:                   ${reset}${GREEN}$cpu %${reset}
+"			
+		fi
+
+###########################################################################################
+		
+
+#
+		if [[ "$cpu" -ge 50 ]] && [[ "$cpu" -lt 90  ]]; then
+
+			echo -ne "${bold}   CPU:                   ${reset}${YELLOW}$cpu %${reset}
+"
+		fi
+
+#############################################################################################
+
+#
+		if [[ "$cpu" -ge 90 ]] && [[ "$cpu" -lt 100 ]]; then
+
+			echo -ne "${bold}   CPU:                   ${reset}${RED}$cpu %${reset}
+"
+		fi
+
+
+###################################################################################################
+
+		if [[ "$cpu" -eq 100 ]]; then
+
+
+			echo -ne "${bold}   CPU:              ${reset}${RED}saturated${reset}
+"
+		fi
+
+
+
+
+#################################################################################
+#	ECHOING LOAD AVERAGE  ----> (8)
+############################################################################
+
+#
+
+	if [[ "$loadFirst" -eq 0 ]]; then
+
+		echo -ne "${bold}   Load average:          ${reset}${GREEN}$one${reset}
+"
+	fi
+		
+#########################################################################################
+
+
+	if [[ "$loadFirst" -eq 1 ]]; then
+
+		echo -ne "${bold}   Load average:          ${reset}${CYAN}$one${reset}
+"
+	fi
+#############################################################################################
+
+		
+	if [[ "$loadFirst" -eq 2 ]]; then
+		echo -ne "${bold}   Load average:          ${reset}${YELLOW}$one${reset}
+"
+	fi
+
+###############################################################################################
+
+		
+	if [[ "$loadFirst" -gt 2 ]]; then
+		echo -ne "${bold}   Load average:          ${reset}${RED}$one${reset}
+"
+	fi
+
+#########################################################################
+#	ECHOING TEMPERATURE   ---> OKAY
+###########################################################   11  #############
+echo ""
+
+
+		if [[ "$t" -lt 40 ]]; then
+
+			echo -ne "${bold}   Temperature:           ${reset}${GREEN}$t°C${reset}
+"
+			echo "" # 11
+		fi
+################################################################  11  ##########################
+
+		
+
+		if [[ "$t" -ge 40 ]] && [[ "$t" -lt 50  ]]; then
+
+			echo -ne "${bold}   Temperature:           ${reset}${CYAN}$t°C${reset}
+"
+			echo "" # 11
+		fi
+
+#########################################################################################
+
+
+		if [[ "$t" -ge 50 ]] && [[ "$t" -lt 65 ]]; then
+
+			echo -ne "${bold}   Temperature:           ${reset}${YELLOW}$t°C${reset}
+"
+			echo "" # 11 (TOTAL : 23)
+		fi
+
+################################################################################
+
+
+		if [[ "$t" -gt 65 ]]; then
+
+			echo -ne "${bold}   Temperature:           ${reset}${RED}$t°C${reset}
+"
+			echo ""
+		fi
+
+
+
+#########################################################################################"
+#	COMPUTER SAYS  ---> OKAY  (10)
+#####################################################################################
+
+echo -ne "${bold}   T470 reckons: ${reset}
+"
+
+#########################################################################################"
+#	QUOTE  ---> OKAY  ---->  (11)
+#####################################################################################
+
+plural=$(echo "$quote1")
+plural=$(grep s$ $CONKY/quote1.txt) #> $CONKY/Q1b
+
+sed 's/\b\(.\)/\u\1/g' $CONKY/quote1.txt > $CONKY/quote1bis.txt
+quote1=$(<$CONKY/quote1bis.txt)
+
+		if [ -z $plural ]; then
+			
+
+			echo -ne "${YELLOW}   $quote1 is $quote2${reset}
+"
+		else
+			echo -ne "${YELLOW}   $quote1 are $quote2${reset}
+"
+
+		fi
+
+
+############################################################################"
+#	STOP CHRONO AND DISPLAY TIME ELAPSED TO PERFORM ALL THE TASKS
+#############################################################################
+	
+secmil2=$(date +%s%N) # time at T2
+echo "$(($secmil2-$secmil1))" > /home/bee/.PROGfiles/Mil/o
+cp /home/bee/.PROGfiles/Mil/o /home/bee/.PROGfiles/Mil/o2
+sec=$(cut -b 1 /home/bee/.PROGfiles/Mil/o)
+mil=$(cut -b 2-4 /home/bee/.PROGfiles/Mil/o2)
+
+echo "   Time elapsed: $sec.$mil sec"
+
+
+sleep 3
+done
+
+
