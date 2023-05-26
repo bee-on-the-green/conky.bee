@@ -1,12 +1,12 @@
 # conky.bee
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
-This a work in progress to create an interactive and AI driven desktop conky. It is primarilly a fun orientated project, but it might become quite useful to the user:
+This a work in progress to create an interactive, and AI driven desktop conky. It is primarilly a fun orientated project, but it might become quite useful to the user:
 ---------------------------------------------------------------------------------------------------------------------------------------------
 
 * It is not a real conky, as it is not "hard coded" in the computer wallpaper.
 * The conky provides the usual geek stuff such as temp, ram usage, etc. (I have already sort of managed that).
-* The user would only nee to press a key to access the real thing (the "geek" conky being just a mean/excuse to access the AI; it could be anything else)
+* The user would only need to press a key to access the real thing (the "geek" conky being just a mean/excuse to access the AI; it could be anything else)
 * A second window would then pop up, with the AI ready to interact with the user (via keyboard; speech recognition if possible)
 
  FINAL GOAL:
@@ -58,7 +58,7 @@ NOTES:
 * I do not allow myself to copy and paste, as there is no fun in doing that.
 
 ###########################################################################################################################################################
-PLEASE FIND BELLOW A DRAFT OF THE INTERFACE (IN THAT PARTTICULAR CASE, A CONKY THAT MIGHT BE APRECIATED BY GAMES AND THE NERDS)
+PLEASE FIND BELLOW A DRAFT OF THE INTERFACE (IN THAT PARTTICULAR CASE, A CONKY THAT MIGHT BE APRECIATED BY GAMERS AS WELL AS NERDS)
 
 
 
